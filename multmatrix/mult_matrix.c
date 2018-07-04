@@ -40,9 +40,9 @@ void mult_matrix(int *matA, int *matB){
 	int *result = malloc(NROWS * NCOLS * sizeof(int));
 	int count = 0;
 
-	#pragma omp parallel firstprivate(result) 
+	#pragma omp parallel firstprivate(result) private(count) 
 	{
-	#pragma omp for reduction(+:count) schedule(static)
+	#pragma omp for schedule(static)
 	for (int i = 0; i < NROWS; i++)
 	{
 		for (int j = 0; j < NROWS; j++)
