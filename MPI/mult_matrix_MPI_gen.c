@@ -18,10 +18,9 @@ int rank;
 int main(int argc, char **argv){
 	MPI_Init(&argc, &argv);
 	int numtasks;
-	char flagA [9];
-	char flagB [9];
 	MPI_Comm_size(MPI_COMM_WORLD,&numtasks);
 	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+	printf("NumTasks:%d\nRank:%d\n",numtasks,rank);
 	if (rank == 0)
 	{
 		int *matA = malloc(NROWS * NCOLS * sizeof(int));
@@ -37,53 +36,44 @@ int main(int argc, char **argv){
 		}
 		struct timeval start, end;
 	  	gettimeofday(&start, NULL);
-	  	MPI_Send(matB,(NROWS*NCOLS),MPI_INT,1,0,MPI_COMM_WORLD);
-	  	MPI_Send(matB,(NROWS*NCOLS),MPI_INT,2,0,MPI_COMM_WORLD);
-	  	int j = 1;
-	  	for (int i = 0; i < NROWS; i+=2, j++)
+	  	for (int i = 1; i < numtasks; i++)
 	  	{
-	  		MPI_Send(&matA[i],NCOLS,MPI_INT,1,j,MPI_COMM_WORLD);
-	  		MPI_Send(&matA[i+1],NCOLS,MPI_INT,2,j,MPI_COMM_WORLD);
-	  	    MPI_Recv(&flagA, 9, MPI_CHAR, 1,j, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-	  		MPI_Recv(&flagB, 9, MPI_CHAR, 2,j, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+	  		MPI_Send(matB,(NROWS*NCOLS),MPI_INT,i,0,MPI_COMM_WORLD);
+	  	}	
+	  	int i = 0;
+	  	int rank_recv;
+	  	while(i < NROWS){
+	  		MPI_Recv(&rank_recv, 1, MPI_INT, MPI_ANY_SOURCE,MPI_ANY_TAG, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+	  		MPI_Send(&matA[i],NCOLS,MPI_INT,rank_recv,MPI_ANY_TAG,MPI_COMM_WORLD);
+	  		MPI_Send(&i,1,MPI_INT,rank_recv,MPI_ANY_TAG,MPI_COMM_WORLD);
+	  		i++;
 	  	}
 		gettimeofday(&end, NULL);
-		printf("%s\n",flagA);
-		printf("%s\n",flagB);
+		for (int i = 1; i < numtasks; i++)
+	  	{
+	  		MPI_Send(&i,(NROWS*NCOLS),MPI_INT,i,MPI_ANY_TAG,MPI_COMM_WORLD);
+	  	}	
+		printf("Finished\n");
 		printf("Tempo total:%lu\n",((end.tv_sec * 1000000 + end.tv_usec)
 			  - (start.tv_sec * 1000000 + start.tv_usec)));
 			
 	}
-	else if (rank == 1)
+	else if (rank != 0)
 	{
+		int i = 0;
 		int *matA = malloc(NCOLS * sizeof(int));
 		int *matB = malloc(NROWS * NCOLS * sizeof(int));
-		char message [] = "Finished";
 		MPI_Recv(matB, (NROWS*NCOLS), MPI_INT, 0, 0, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-		for (int i = 1; i < NCOLS;i++)
-		{
-			MPI_Recv(matA, NCOLS, MPI_INT, 0, i, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+		while(i < NCOLS){
+			MPI_Send(&rank,1,MPI_INT,0,MPI_ANY_TAG,MPI_COMM_WORLD);
+			MPI_Recv(matA, NCOLS, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 			mult_matrix(matA,matB);
-			MPI_Send(&message,9,MPI_CHAR,0,i,MPI_COMM_WORLD);
-		}	
-	}
-	else if (rank == 2)
-	{
-		int *matA = malloc(NCOLS * sizeof(int));
-		int *matB = malloc(NROWS * NCOLS * sizeof(int));
-		char message [] = "Finished";
-		MPI_Recv(matB, (NROWS*NCOLS), MPI_INT, 0, 0, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-		for (int i = 1; i < NCOLS; i++)
-		{
-			MPI_Recv(matA, NCOLS, MPI_INT, 0, i, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-			mult_matrix(matA,matB);
-			MPI_Send(&message,9,MPI_CHAR,0,i,MPI_COMM_WORLD);	
 		}
+		
 	}
 	MPI_Finalize();
 	return 0;
 }
-
 
 void mult_matrix(int *matA, int *matB){
 	int *result = malloc(NROWS * NCOLS * sizeof(int));
@@ -118,4 +108,3 @@ void mult_matrix(int *matA, int *matB){
 	*/
 	
 }
- 
