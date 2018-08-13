@@ -22,6 +22,7 @@ int main(int argc, char **argv){
 	char flagB [9];
 	MPI_Comm_size(MPI_COMM_WORLD,&numtasks);
 	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+	printf("NumTasks:%d\nRank:%d\n",numtasks,rank);
 	if (rank == 0)
 	{
 		int *matA = malloc(NROWS * NCOLS * sizeof(int));
@@ -44,12 +45,12 @@ int main(int argc, char **argv){
 	  	{
 	  		MPI_Send(&matA[i],NCOLS,MPI_INT,1,j,MPI_COMM_WORLD);
 	  		MPI_Send(&matA[i+1],NCOLS,MPI_INT,2,j,MPI_COMM_WORLD);
-	  	    MPI_Recv(&flagA, 9, MPI_CHAR, 1,j, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+	  		MPI_Recv(&flagA, 9, MPI_CHAR, 1,j, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 	  		MPI_Recv(&flagB, 9, MPI_CHAR, 2,j, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 	  	}
 		gettimeofday(&end, NULL);
-		printf("%s\n",flagA);
-		printf("%s\n",flagB);
+		printf("Rank1:%s\n",flagA);
+		printf("Rank2:%s\n",flagB);
 		printf("Tempo total:%lu\n",((end.tv_sec * 1000000 + end.tv_usec)
 			  - (start.tv_sec * 1000000 + start.tv_usec)));
 			
@@ -60,7 +61,7 @@ int main(int argc, char **argv){
 		int *matB = malloc(NROWS * NCOLS * sizeof(int));
 		char message [] = "Finished";
 		MPI_Recv(matB, (NROWS*NCOLS), MPI_INT, 0, 0, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-		for (int i = 1; i < NCOLS;i++)
+		for (int i = 1; i <= (NROWS/2);i++)
 		{
 			MPI_Recv(matA, NCOLS, MPI_INT, 0, i, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 			mult_matrix(matA,matB);
@@ -73,7 +74,7 @@ int main(int argc, char **argv){
 		int *matB = malloc(NROWS * NCOLS * sizeof(int));
 		char message [] = "Finished";
 		MPI_Recv(matB, (NROWS*NCOLS), MPI_INT, 0, 0, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-		for (int i = 1; i < NCOLS; i++)
+		for (int i = 1; i <= (NROWS/2); i++)
 		{
 			MPI_Recv(matA, NCOLS, MPI_INT, 0, i, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 			mult_matrix(matA,matB);

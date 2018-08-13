@@ -42,17 +42,19 @@ int main(int argc, char **argv){
 	  	}	
 	  	int i = 0;
 	  	int rank_recv;
-	  	while(i < NROWS){
+	  	do{
 	  		MPI_Recv(&rank_recv, 1, MPI_INT, MPI_ANY_SOURCE,MPI_ANY_TAG, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-	  		MPI_Send(&matA[i],NCOLS,MPI_INT,rank_recv,MPI_ANY_TAG,MPI_COMM_WORLD);
-	  		MPI_Send(&i,1,MPI_INT,rank_recv,MPI_ANY_TAG,MPI_COMM_WORLD);
-	  		i++;
-	  	}
+	  		MPI_Send(&i,1,MPI_INT,rank_recv,2,MPI_COMM_WORLD);
+	  		MPI_Send(&matA[i],NCOLS,MPI_INT,rank_recv,1,MPI_COMM_WORLD);
+	 		i++;
+	  	}while(i < NROWS);
 		gettimeofday(&end, NULL);
-		for (int i = 1; i < numtasks; i++)
-	  	{
-	  		MPI_Send(&i,(NROWS*NCOLS),MPI_INT,i,MPI_ANY_TAG,MPI_COMM_WORLD);
-	  	}	
+		int j = 1;
+		do{
+			MPI_Recv(&rank_recv, 1, MPI_INT, MPI_ANY_SOURCE,MPI_ANY_TAG, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+	  		MPI_Send(&i,1,MPI_INT,rank_recv,2,MPI_COMM_WORLD);
+	  		j++;
+		}while(j < numtasks);
 		printf("Finished\n");
 		printf("Tempo total:%lu\n",((end.tv_sec * 1000000 + end.tv_usec)
 			  - (start.tv_sec * 1000000 + start.tv_usec)));
@@ -64,12 +66,15 @@ int main(int argc, char **argv){
 		int *matA = malloc(NCOLS * sizeof(int));
 		int *matB = malloc(NROWS * NCOLS * sizeof(int));
 		MPI_Recv(matB, (NROWS*NCOLS), MPI_INT, 0, 0, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-		while(i < NCOLS){
-			MPI_Send(&rank,1,MPI_INT,0,MPI_ANY_TAG,MPI_COMM_WORLD);
-			MPI_Recv(matA, NCOLS, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-			mult_matrix(matA,matB);
-		}
-		
+		do{
+			MPI_Send(&rank,1,MPI_INT,0,1,MPI_COMM_WORLD);
+			MPI_Recv(&i, 1, MPI_INT, 0, 2, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+			if (i < NCOLS)
+			{
+				MPI_Recv(matA, NCOLS, MPI_INT, 0, 1, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+				mult_matrix(matA,matB);	
+			}
+		}while(i < NCOLS);		
 	}
 	MPI_Finalize();
 	return 0;
