@@ -1,6 +1,7 @@
 #include <math.h>
 #include <sys/time.h>
 #include <time.h>
+#include <omp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #define NROWS  2000
@@ -39,6 +40,9 @@ void mult_matrix(int *matA, int *matB){
 	int *result = malloc(NROWS * NCOLS * sizeof(int));
 	int count = 0;
 
+	#pragma omp parallel firstprivate(result) private(count) 
+	{
+	#pragma omp for schedule(static)
 	for (int i = 0; i < NROWS; i++)
 	{
 		for (int j = 0; j < NROWS; j++)
@@ -54,7 +58,7 @@ void mult_matrix(int *matA, int *matB){
 			
 	}
 		//printf("Número de Threads:%d\n",omp_get_num_threads());
-	
+	}
 	/*
 	for (int i = 0; i < 100; i++)
 	{

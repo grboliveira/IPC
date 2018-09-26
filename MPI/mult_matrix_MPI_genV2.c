@@ -36,8 +36,7 @@ int main(int argc, char **argv){
 				matB[(i*NROWS)+j] = rand() % 1000;
 			}
 		} 
-		struct timeval start, end;
-	  	gettimeofday(&start, NULL);	
+		struct timeval start, end;	
 	  	int sizepart = NROWS/(numtasks-1);
 	  	int subsizepart = ((sizepart*NCOLS)*sizeof(int))/MEM_SIZE;
 	  	for (int i = 1; i < numtasks; i++)
@@ -47,6 +46,7 @@ int main(int argc, char **argv){
 	  	//printf("Saiu do for que envia o tamanho\n");
 	  	int abort = 0;
 	  	int *matransp = transp_matrix(matB);
+		gettimeofday(&start, NULL);	
 	  	for (int i = 0; i < subsizepart; i=i+subsizepart)
 	  	{
 	  		for (int j = 1 ; j < numtasks;j++)

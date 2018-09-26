@@ -4,8 +4,8 @@
 #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
-#define NROWS  1000
-#define NCOLS  1000
+#define NROWS  2000
+#define NCOLS  2000
 
 /*
  *Multiplicação de matrizes com MPI
