@@ -14,9 +14,9 @@
 #include <sys/mman.h>
 #include <omp.h>
 #include <sys/wait.h>
-#define NROWS  5000
-#define NCOLS  5000
-#define MEM_SIZE 1024
+#define NROWS  2048
+#define NCOLS  2048
+#define MEM_SIZE 512
 
 /*
  *Multiplicação de matrizes
@@ -86,7 +86,7 @@ int main(int argc, char **argv){
 	if(child_pid == 0)exit(id);
 	else{
 		for(int i = 1;i < omp_get_max_threads();i++){
-			pid_t son_pid = waitpid(child_pid,NULL,WUNTRACED); 
+			pid_t son_pid = waitpid(-1,NULL,WUNTRACED); 
 			printf("ChildPID:%d\ti:%d\n",son_pid,i);
 		}
 	}	
