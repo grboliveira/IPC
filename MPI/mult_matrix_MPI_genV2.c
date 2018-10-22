@@ -114,13 +114,11 @@ int main(int argc, char **argv){
 	  			{
 					int *resultpart = malloc(piecemat * sizeof(int));
 					int m = 0;
-					int count = 0;
 	  				MPI_Recv(resultpart, piecemat, MPI_INT, j, 4, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 	  				pos = i*NCOLS;
 	  				for(int k = 0 ;m < piecemat; k+=(NCOLS-subsizepart))
 	  				{
 				
-						count++;
 	  					for(int l = 0;l < subsizepart;l++,m++)
 	  					{
 							matC[((i+(j-1))*piecemat)+k+l] = resultpart[m];
