@@ -1,0 +1,105 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% How to use writeLaTeX: 
+%
+% You edit the source code here on the left, and the preview on the
+% right shows you the result within a few seconds.
+%
+% Bookmark this page and share the URL with your co-authors. They can
+% edit at the same time!
+%
+% You can upload figures, bibliographies, custom classes and
+% styles using the files menu.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[12pt]{article}
+
+\usepackage{sbc-template}
+
+\usepackage{graphicx,url}
+
+%\usepackage[brazil]{babel}   
+\usepackage[utf8]{inputenc}  
+
+     
+\sloppy
+
+\title{Programação Paralela em Nível de Sistema Operacional}
+
+\author{Guilherme Reis Barbosa de Oliveira\inst{1}}
+
+
+\address{Grupo de Arquitetura de Computadores e Processamento Paralelo (CArT)
+        \\ Departamento de Ciencia da Computação
+        \\ Pontifícia Universidade Católica de Minas Gerais (PUC Minas)
+        \\ Belo Horizonte, Minas Gerais, Brasil
+}
+
+\begin{document} 
+
+\maketitle
+
+\begin{abstract}
+  
+\end{abstract}
+     
+\begin{resumo} 
+  A Programação Paralela possui benfícios enormes em termos de tempo de execução porém há várias maneiras de 
+  paralelizar um kernel. Este artigo realiza a comparação entre tempos de execução utilizando OpenMP e Regiões de Memória
+  Compartilhada (POSIX) em dois kernels específicos, Friendly Numbers e Lower Upper. 
+\end{resumo}
+
+
+\section{Introdução}
+
+
+\section{Kernels Utilizados}
+\subsection{Friendly Numbers}
+
+O Kernel Friendly Numbers é iniciado com uma faixa de números seguidos e retorna a quantidade de números que possuem o mesmo índice dentro desta faixa. O cálculo deste índice é obtido com a soma dos números divisores de um dado número N e mais a soma do próprio número N e o resultado desta soma é dividido pelo próprio número N. Este índice é calculado para todos os números da faixa de números passada como parâmetro e aqueles que possuem o mesmo índice são definidos como números amigáveis(Friendly Numbers), incrementando em 1 a varíavel que contabiliza a quantidade de números amigáveis. Após realizar o processo como todos os números da faixa dada, a quantidade de números amigáveis é retornada. 
+
+\centering{{\sigma \left ( 30 \right )} =  \frac{1+2+3+5+6+10+15+30}{30} = \frac{12}{5}}
+
+\centering{{\sigma \left ( 140 \right )} = \frac{1+2+4+5+7+10+14+20+28+35+70+140}{140}=\frac{12}{5}}
+
+
+O método de programação paralela implemntado é o MapReduce, onde a carga a ser processada é dividida igualmente para cada thread ou processo, reduzindo significamente o tempo de execução à medida que o número de threads/processos é aumentada. Todos os numeradores e denominadores são salvos nos arranjos NUM e DEM respectivamente. Após o processamento de todos os números da faixa passada como parâmetro,
+os valores de NUM e DEN são comparados entre as demais valores dos arranjos. Caso haja igualdade, a variavel que contabiliza o número de números amigáveis é incrementada em 1.
+
+\subsection{LU Factorization}
+
+O Kernel Lower Upper Factorization recebe três matrizes(M, L e U) como parâmetros. A matriz M é o elemento a ser decomposto no algoritmo como forma de um produto de duas matrizes triangulares. As matrizes L e U são as matrizes triangulares inferior e superior, respectivamente. Em cada iteração é analisado uma submatriz, começando do tamanho original e reduzindo uma coluna e uma fileira em cada iteração, onde é encontrado um pivô pelo método de eliminação de Gauss. Após obtido o elemento pivô, a linha do mesmo é toda dividida pelo valor do pivô. O passo seguinte é a redução, onde as linhas abaixo da diagonal principal são anuladas e os valores encontrados são recolocados na matriz U e outros são escritos na matriz L.
+
+O método de programação paralela utilizado é Workpool, onde as tarefas são dinamicamente assumidas pelas threads/processos. Cada thread/processo assume uma fileira para computação e o algoritmo possui trechos críticos e barreiras para sicronização. 
+
+
+\section{Sections and Paragraphs}
+
+
+
+\subsection{Subsections}
+
+
+
+\section{Figures and Captions}\label{sec:figs}
+
+
+
+
+
+
+
+\section{References}
+
+Bibliographic references must be unambiguous and uniform.  We recommend giving
+the author names references in brackets, e.g. \cite{knuth:84},
+\cite{boulic:91}, and \cite{smith:99}.
+
+The references must be listed using 12 point font size, with 6 points of space
+before each reference. The first line of each reference should not be
+indented, while the subsequent should be indented by 0.5 cm.
+
+\bibliographystyle{sbc}
+\bibliography{sbc-template}
+
+\end{document}
