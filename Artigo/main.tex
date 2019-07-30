@@ -53,6 +53,15 @@
 
 \section{Introdução}
 
+Há décadas, pesquisadores e engenheiros buscam maneiras mais eficientes de se executar um algoritmo com o objetivo de reduzir o tempo de execução para assim obter resultados de maneira mais rápida, principalmente quando há uma grande carga a ser executada. A programação paralela surge com o intuito de dividir a carga a ser processada em diferentes unidades de execução, reduzindo significamente o tempo de execução dos algoritmos. Atualmente existe diversas ferramentas para realizar este trabalho em paralelo, como OpenMP, MPI, Vetorização, CUDA e interface POSIX.
+
+A interface OpenMP, disponível para as lingugens de programaçã C/C++ e Fortran, é uma ferramenta para a implementação do paralelismo em algoritmos. Esta interface realiza a divisão do trabalho através da criação de threads de um mesmo processo. As threads utilizam os mesmos endereços da região de memória compartilhada, como também os mesmos recursos. É possível configurar variáveis privadas, como também determinar regiões críticas do código onde somente uma thread pode executar o trecho determinado por vez. As diretrizes do OpenMP permitem toda a configuração citada anteriormente, assim como barreiras de sicronização, Fork(criação das threads) e o Join(finalização das threads), com uma implmentação de baixo custo para o programador.
+
+A interface POSIX é uma série de normas definidas pelo IEEE(Instituto de Engenheiros Eletricistas e Eletrônicos) para garantir o funcionamento e execução de um código-fonte que possui funções da interface POSIX implementadas em outro qualquer sistema que adota o POSIX. O POSIX permite a criação de regiões de memória compartilhada entre processos, possibilitando o paralelismo do código através do mesmo. A chamada de função fork() do sistema operacional Linux realiza a criação de novos processos e com regiões de memória compartilhada, é possível a comunicação e a passagem de valores entre si. POSIX também oferece mecanismos de sicronização, como semáforos e timers. A implementação do POSIX não é fácil como a interface OpenMP, exigindo do programador mais atenção e conhecimento sobre o sistema operacional utilizado e suas limitações.
+
+As seguintes seções deste artigo abordam a comparação entre as interfaces em dois Kernels específicos, o Friendly Numbers e LU Factorization. A seção 2 aborda o funcionamento de ambos os Kernels, a seção 3 explica a metodologia de testes utilizada, a seção 4 exibe os resultados dos testes e a seção 5 apresenta uma conclusão sobre os resultados obtidos. 
+
+
 
 \section{Kernels Utilizados}
 \subsection{Friendly Numbers}
