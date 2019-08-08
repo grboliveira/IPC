@@ -44,6 +44,7 @@
 \maketitle
 
 \begin{abstract}
+    Parallel Programming has many benefits about execution time but there are many ways to implement it on a Kernel. This article covers the execution time using OpenMP and Shared Memory Regions(POSIX) among two specific kernels from CAP BENCH: Friendly Numbers and Lower Upper.
 \end{abstract}
      
 \begin{resumo} 
@@ -75,7 +76,7 @@ Após a apresentação das interfaces, aparece uma possível dúvida: qual inter
 As seguintes seções deste artigo abordam a comparação entre as interfaces em dois \textit{Kernels} específicos, o Friendly Numbers e LU Factorization, ambos do pacote de benchmarks do CAP BENCH A Seção 3 aborda o funcionamento de ambos os Kernels, a Seção 4 explica a metodologia de testes utilizada, a Seção 5 exibe os resultados dos testes e a Seção 6 apresenta uma conclusão sobre os resultados obtidos. 
 
 
-\section{Trabalhos Correlatos OpenMP X POSIX}
+\section{Trabalhos Correlatos}
 
 \section{Kernels Utilizados}
 \subsection{Friendly Numbers}
@@ -102,7 +103,7 @@ O método de programação paralela utilizado é o Workpool, onde as tarefas sã
 
 
 \section{Metodologia de Teste}
-A estratégia de testes adotada, que permitiu a comparação entre os resultados obtidos, foi a seguinte: para ambos os \textit{Kernels}, foi utilzado diferentes cargas para diferentes números de \textit{thread}/processos. Para o \textit{Kernel} FN, foram utilizados cinco tamanhos de carga: Tiny (faixa de 10001 à 14096), small(100001 à 116384), standard (500001 à 532768), large (2000001 à 2032768) e huge (8000001 à 8065536). O \textit{Kernel} LU também foi utilzado 5 tamanhos de carga, são elas: tiny (matriz de tamanho 512X512), small (1024x1024), standard (1536x1536), large (2048x2048) e huge (2560x2560). Todas as cargas, em ambos os \textit{Kernels}, foram executadas com 1, 2, 4, 8 e 16 \textit{threads}/processos. Ambos os \textit{Kernels} foram implementados na linguagem de programação C.
+A estratégia de testes adotada, que permitiu a comparação entre os resultados obtidos, foi a seguinte: para ambos os \textit{Kernels}, foi utilzado diferentes cargas para diferentes números de \textit{thread}/processos. Para o \textit{Kernel} FN, foram utilizados cinco tamanhos de carga: Tiny (faixa de 10001 à 14096), small (100001 à 116384), standard (500001 à 532768), large (2000001 à 2032768) e huge (8000001 à 8065536). O \textit{Kernel} LU também foi utilzado 5 tamanhos de carga, são elas: tiny (matriz de tamanho 512X512), small (1024x1024), standard (1536x1536), large (2048x2048) e huge (2560x2560). Todas as cargas, em ambos os \textit{Kernels}, foram executadas com 1, 2, 4, 8 e 16 \textit{threads}/processos. Ambos os \textit{Kernels} foram implementados na linguagem de programação C.
 
 Para a obtenção do tempo de execução, foi utilizado a biblioteca \textit{Timer} da linguagem de programação C. O ínicio da contagem do tempo de execução é iniciada antes da chamada da função \textit{lower\_upper()} e o término da mesma é dado após o final da execução da função \textit{lower\_upper()}.
 
