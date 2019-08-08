@@ -14,6 +14,8 @@
 
 \documentclass[12pt]{article}
 
+
+
 \usepackage{sbc-template}
 
 \usepackage{graphicx,url}
@@ -25,9 +27,10 @@
      
 \sloppy
 
-\title{Programação Paralela em Nível de Sistema Operacional}
+\title{Avaliação Do Desempenho da Interface POSIX e OpenMP para Kernels do CAP BENCH}
 
-\author{Guilherme Reis Barbosa de Oliveira\inst{1}}
+\author{Guilherme Reis Barbosa de Oliveira, Pedro Henrique Penna, Henrique Cota de Freitas}
+
 
 
 \address{Grupo de Arquitetura de Computadores e Processamento Paralelo (CArT)
@@ -41,32 +44,43 @@
 \maketitle
 
 \begin{abstract}
-  
 \end{abstract}
      
 \begin{resumo} 
   A Programação Paralela possui benfícios enormes em termos de tempo de execução porém há várias maneiras de 
-  paralelizar um kernel. Este artigo realiza a comparação entre tempos de execução utilizando OpenMP e Regiões de Memória
-  Compartilhada (POSIX) em dois kernels específicos, Friendly Numbers e Lower Upper. 
+  paralelizar um kernel de aplicação. Este artigo aborda a comparação entre tempos de execução utilizando OpenMP e Regiões de Memória
+  Compartilhada (POSIX) em dois kernels específicos do CAP BENCH: Friendly Numbers e Lower Upper. 
 \end{resumo}
 
 
 \section{Introdução}
 
-Há décadas, pesquisadores e engenheiros buscam maneiras mais eficientes de se executar um algoritmo com o objetivo de reduzir o tempo de execução para assim obter resultados de maneira mais rápida, principalmente quando há uma grande carga a ser executada. A programação paralela surge com o intuito de dividir a carga a ser processada em diferentes unidades de execução, reduzindo significamente o tempo de execução dos algoritmos. Atualmente existe diversas ferramentas para realizar este trabalho em paralelo, como OpenMP, MPI, Vetorização, CUDA e interface POSIX.
+Há décadas, pesquisadores e engenheiros buscam maneiras mais eficientes de se executar um algoritmo com o objetivo de reduzir o tempo de execução para assim obter resultados de maneira mais rápida, principalmente quando há uma grande carga a ser executada. A programação paralela surge com o intuito de dividir a carga a ser processada em diferentes unidades de execução, reduzindo significamente o tempo de execução dos algoritmos. Atualmente existem diversas ferramentas para realizar este trabalho em paralelo, como OpenMP, MPI, Vetorização, CUDA e interface POSIX.
 
-A interface OpenMP, disponível para as lingugens de programaçã C/C++ e Fortran, é uma ferramenta para a implementação do paralelismo em algoritmos. Esta interface realiza a divisão do trabalho através da criação de threads de um mesmo processo. As threads utilizam os mesmos endereços da região de memória compartilhada, como também os mesmos recursos. É possível configurar variáveis privadas, como também determinar regiões críticas do código onde somente uma thread pode executar o trecho determinado por vez. As diretrizes do OpenMP permitem toda a configuração citada anteriormente, assim como barreiras de sicronização, Fork(criação das threads) e o Join(finalização das threads), com uma implmentação de baixo custo para o programador.
+A interface OpenMP, disponível para as lingugens de programação 
+\textit{C/C++} e \textit{Fortran}, é uma ferramenta para a implementação do paralelismo em algoritmos. Esta interface realiza a divisão do trabalho através da criação de threads de um mesmo processo. As threads utilizam os mesmos endereços da região de memória compartilhada, como também os mesmos recursos. É possível configurar variáveis privadas, como também determinar regiões críticas do código onde somente uma thread pode executar o trecho determinado por vez. As diretrizes do OpenMP permitem toda a configuração citada anteriormente, assim como barreiras de sicronização, Fork (criação das threads) e o Join(finalização das threads), com uma implementação de baixo custo para o programador.
 
-A interface POSIX é uma série de normas definidas pelo IEEE(Instituto de Engenheiros Eletricistas e Eletrônicos) para garantir o funcionamento e execução de um código-fonte que possui funções da interface POSIX implementadas em outro qualquer sistema que adota o POSIX. O POSIX permite a criação de regiões de memória compartilhada entre processos, possibilitando o paralelismo do código através do mesmo. A chamada de função fork() do sistema operacional Linux realiza a criação de novos processos e com regiões de memória compartilhada, é possível a comunicação e a passagem de valores entre si. POSIX também oferece mecanismos de sicronização, como semáforos e timers. A implementação do POSIX não é fácil como a interface OpenMP, exigindo do programador mais atenção e conhecimento sobre o sistema operacional utilizado e suas limitações.
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=100mm,scale=0.5]{openmp_multiple_threads_master.jpg}
+  \caption{OpenMP: Fork(Criação de \textit{threads})}
+  \label{fig:master_thread}
+\end{figure}
 
-As seguintes seções deste artigo abordam a comparação entre as interfaces em dois Kernels específicos, o Friendly Numbers e LU Factorization. A seção 2 aborda o funcionamento de ambos os Kernels, a seção 3 explica a metodologia de testes utilizada, a seção 4 exibe os resultados dos testes e a seção 5 apresenta uma conclusão sobre os resultados obtidos. 
+
+A interface POSIX (Portable Operating System Interface) é uma série de normas definidas pelo IEEE (Instituto de Engenheiros Eletricistas e Eletrônicos) para garantir o funcionamento e execução de um código fonte que possui funções da interface POSIX implementadas em outro qualquer sistema que adota o POSIX. O POSIX permite a criação de regiões de memória compartilhada entre processos, possibilitando o paralelismo do código através do mesmo. A chamada de função fork() do sistema operacional Linux realiza a criação de novos processos e com regiões de memória compartilhada, é possível a comunicação e a passagem de valores entre si. POSIX também oferece mecanismos de sicronização, como semáforos e timers. A implementação do POSIX não é fácil como a interface OpenMP, exigindo do programador mais atenção e conhecimento sobre o sistema operacional utilizado e suas limitações.
+
+Após a apresentação das interfaces, aparece uma possível dúvida: qual interface desmonstra melhor eficiência para a paralelização de um algoritmo? Este artigo aborda o desempenho das interfaces OpenMP e POSIX em dois \textit{Kernels} especifícos: Friendly Numbers e LU Factorization. Ambos os \textit{Kernels} possuem suas particularidades, que influenciam na implmentação e no tempo de execução dos algoritmos. O objetivo é explicitar qual interface é mais válida em um determinado contexto.
+
+As seguintes seções deste artigo abordam a comparação entre as interfaces em dois \textit{Kernels} específicos, o Friendly Numbers e LU Factorization, ambos do pacote de benchmarks do CAP BENCH A Seção 3 aborda o funcionamento de ambos os Kernels, a Seção 4 explica a metodologia de testes utilizada, a Seção 5 exibe os resultados dos testes e a Seção 6 apresenta uma conclusão sobre os resultados obtidos. 
 
 
+\section{Trabalhos Correlatos OpenMP X POSIX}
 
 \section{Kernels Utilizados}
 \subsection{Friendly Numbers}
 
-O Kernel Friendly Numbers é iniciado com uma faixa de números seguidos e retorna a quantidade de números que possuem o mesmo índice dentro desta faixa. O cálculo deste índice é obtido com a soma dos números divisores de um dado número N e mais a soma do próprio número N e o resultado desta soma é dividido pelo próprio número N. Este índice é calculado para todos os números da faixa de números passada como parâmetro e aqueles que possuem o mesmo índice são definidos como números amigáveis(Friendly Numbers), incrementando em 1 a varíavel que contabiliza a quantidade de números amigáveis. Após realizar o processo como todos os números da faixa dada, a quantidade de números amigáveis é retornada. 
+O Kernel Friendly Numbers é iniciado com uma faixa de números seguidos e retorna a quantidade de números que possuem o mesmo índice dentro desta faixa. O cálculo deste índice é obtido com a soma dos números divisores de um dado número N e mais a soma do próprio número N e o resultado desta soma é dividido pelo próprio número N. Este índice é calculado para todos os números da faixa de números passada como parâmetro e aqueles que possuem o mesmo índice são definidos como números amigáveis (Friendly Numbers), incrementando em 1 a varíavel que contabiliza a quantidade de números amigáveis. Após realizar o processo como todos os números da faixa dada, a quantidade de números amigáveis é retornada. 
 
 \begin{gather*}
 {\sigma \left ( 30 \right )} =  \frac{1+2+3+5+6+10+15+30}{30} = \frac{12}{5}
@@ -77,108 +91,135 @@ O Kernel Friendly Numbers é iniciado com uma faixa de números seguidos e retor
 \end{gather*}
 
 
-O método de programação paralela implemntado é o MapReduce, onde a carga a ser processada é dividida igualmente para cada thread ou processo, reduzindo significamente o tempo de execução à medida que o número de threads/processos é aumentada. Todos os numeradores e denominadores são salvos nos arranjos NUM e DEM respectivamente. Após o processamento de todos os números da faixa passada como parâmetro,
+O método de programação paralela implementado é o MapReduce, onde a carga a ser processada é dividida igualmente para cada thread ou processo, reduzindo significamente o tempo de execução à medida que o número de threads/processos é aumentada. Todos os numeradores e denominadores são salvos nos arranjos NUM e DEM, respectivamente. Após o processamento de todos os números da faixa passada como parâmetro,
 os valores de NUM e DEN são comparados entre as demais valores dos arranjos. Caso haja igualdade, a variavel que contabiliza o número de números amigáveis é incrementada em 1.
 
 \subsection{LU Factorization}
 
-O Kernel Lower Upper Factorization recebe três matrizes(M, L e U) como parâmetros. A matriz M é o elemento a ser decomposto no algoritmo como forma de um produto de duas matrizes triangulares. As matrizes L e U são as matrizes triangulares inferior e superior, respectivamente. Em cada iteração é analisado uma submatriz, começando do tamanho original e reduzindo uma coluna e uma fileira em cada iteração, onde é encontrado um pivô pelo método de eliminação de Gauss. Após obtido o elemento pivô, a linha do mesmo é toda dividida pelo valor do pivô. O passo seguinte é a redução, onde as linhas abaixo da diagonal principal são anuladas e os valores encontrados são recolocados na matriz U e outros são escritos na matriz L.
+O \textit{Kernel} Lower Upper Factorization recebe três matrizes(M, L e U) como parâmetros. A matriz M é o elemento a ser decomposto no algoritmo como forma de um produto de duas matrizes triangulares. As matrizes L e U são as matrizes triangulares inferior e superior, respectivamente. Em cada iteração é analisado uma submatriz, começando do tamanho original e reduzindo uma coluna e uma fileira em cada iteração, onde é encontrado um pivô pelo método de eliminação de Gauss. Após obtido o elemento pivô, a linha do mesmo é toda dividida pelo valor do pivô. O passo seguinte é a redução, onde as linhas abaixo da diagonal principal são anuladas e os valores encontrados são recolocados na matriz U e outros são escritos na matriz L.
 
-O método de programação paralela utilizado é Workpool, onde as tarefas são dinamicamente assumidas pelas threads/processos. Cada thread/processo assume uma fileira para computação e o algoritmo possui trechos críticos e barreiras para sicronização. 
+O método de programação paralela utilizado é o Workpool, onde as tarefas são dinamicamente assumidas pelas \textit{thread}/processos. Cada \textit{thread}/processo assume uma fileira para computação e o algoritmo possui trechos críticos e barreiras para sicronização. 
 
 
 \section{Metodologia de Teste}
-A estratégia de testes adotada, que permitiu a comparação entre os resultados obtidos, foi a seguinte: para ambos os kernels, foi utilzado diferentes cargas para diferentes números de threads/processos. Para o kernel FN, forma utilizados cinco tamanhos de carga: Tiny(faixa de 10001 à 14096), small(100001 à 116384), standard(500001 à 532768), large(2000001 à 2032768) e huge(8000001 à 8065536). O kernel LU também foi utilzado 5 tamanhos de carga, são elas: tiny(matriz de tamanho 512X512), small(1024x1024), standard(1536x1536),large(2048x2048) e huge(2560x2560). Todas as cargas, em ambos os kernels, foram executadas com 1, 2, 4, 8 e 16 threads/processos. Ambos os Kernels foram implementados na linguagem de programação C.
+A estratégia de testes adotada, que permitiu a comparação entre os resultados obtidos, foi a seguinte: para ambos os \textit{Kernels}, foi utilzado diferentes cargas para diferentes números de \textit{thread}/processos. Para o \textit{Kernel} FN, foram utilizados cinco tamanhos de carga: Tiny (faixa de 10001 à 14096), small(100001 à 116384), standard (500001 à 532768), large (2000001 à 2032768) e huge (8000001 à 8065536). O \textit{Kernel} LU também foi utilzado 5 tamanhos de carga, são elas: tiny (matriz de tamanho 512X512), small (1024x1024), standard (1536x1536), large (2048x2048) e huge (2560x2560). Todas as cargas, em ambos os \textit{Kernels}, foram executadas com 1, 2, 4, 8 e 16 \textit{threads}/processos. Ambos os \textit{Kernels} foram implementados na linguagem de programação C.
 
-Para a obtenção do tempo de execução, foi utilizado a biblioteca Timer da linguagem de programação C. O ínicio da contagem do tempo de execução é iniciada antes da chamada da função lower\_upper() e o término da mesma é dado após o final da execução da função lower\_upper().
+Para a obtenção do tempo de execução, foi utilizado a biblioteca \textit{Timer} da linguagem de programação C. O ínicio da contagem do tempo de execução é iniciada antes da chamada da função \textit{lower\_upper()} e o término da mesma é dado após o final da execução da função \textit{lower\_upper()}.
 
-A máquina utilzada para todos os testes foi a Quadro que se localiza nas instalações da Pontifícia Universidade Católica de Minas Gerais. A Quadro possui 24 processadores Intel(R) Xeon(R), cada um com 2.40GHz de frequência e 12288 KB de memória cache. A máquina possui 32757480 kB (31,24 GB) de memória RAM, também possui 2440908 kB(2,33 GB) de memória Cache. 
+A máquina utilzada para todos os testes foi um servidor, que se localiza nas instalações da Pontifícia Universidade Católica de Minas Gerais, que possui 12 núcleos, 24 \textit{Threads} Intel(R) Xeon(R), cada um com 2.40GHz de frequência e 12288 K de memória \textit{cache}. A máquina possui 32757480 kB (31,24 GB) de memória RAM. 
 
 
 
 \section{Resultados}
 Após a execução da bateria de testes, obtivemos os seguintes resultados:
 
-\subsection{Tempos de execução: LU Factorization}
-A tabela a seguir apresenta as médias dos tempos de execução, em segundos, do algoritmo LU Factorization, utilizando a biblioteca OpenMP para aplicar a programação paralela:
 
-\begin{table}[h!]
-\begin{tabular}{|l|l|l|l|l|l|}
-\hline
-LU(OpenMP) & Tiny      & Small     & Standard   & Large      & Huge       \\ \hline
-1          & 0,2187414 & 1,7209616 & 5,1821362  & 12,4690212 & 24,5876232 \\ \hline
-2          & 0,134648  & 0,9007424 & 2,867135   & 6,2886334  & 12,5744496 \\ \hline
-4          & 0,067568  & 0,4623772 & 1,50308    & 3,356147   & 6,4029342  \\ \hline
-8          & 0,0446426 & 0,2502202 & 0,802811   & 1,8829026  & 3,767297   \\ \hline
-16         & 0,0435478 & 0,2325758 & 0,75944848 & 1,8147124  & 3,6430722  \\ \hline
-\end{tabular}
-\end{table}
+A Figura 2 apresenta os tempos de execução, em segundos, do algoritmo LU Factorization, utilizando a biblioteca OpenMP:
 
-A tabela a seguir apresenta as médias dos tempos de execução, em segundos, do algoritmo LU Factorization, utilizando a interface POSIX e seus mecanismos de sicronização para aplicar a programação paralela:
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=100mm,scale=0.5]{graph_lu_x86.jpg}
+  \caption{LU Factorization com OpenMP}
+  \label{fig:FN OpenMP}
+\end{figure}
 
-\begin{table}[h!]
-\begin{tabular}{|l|l|l|l|l|l|}
-\hline
-LU(POSIX) & Tiny       & Small     & Standard  & Large     & Huge       \\ \hline
-1         & 0,21806988 & 1,7079306 & 5,2348252 & 12,340098 & 24,5316108 \\ \hline
-2         & 0,1856204  & 1,1790356 & 3,7191378 & 8,8093492 & 16,948548  \\ \hline
-4         & 0,1519794  & 0,8019212 & 2,5203218 & 5,8215284 & 11,0193182 \\ \hline
-8         & 0,2544392  & 0,759183  & 2,069339  & 4,25864   & 7,9015666  \\ \hline
-16        & 0,4113672  & 1,1094982 & 2,5012814 & 5,0221258 & 9,0107844  \\ \hline
-\end{tabular}
-\end{table}
+%\begin{table}[h!]
+%\begin{tabular}{|l|l|l|l|l|l|}
+%\hline
+%LU(OpenMP) & Tiny      & Small     & Standard   & Large      & Huge       \\ \hline
+%1          & 0,2187414 & 1,7209616 & 5,1821362  & 12,4690212 & 24,5876232 \\ \hline
+%2          & 0,134648  & 0,9007424 & 2,867135   & 6,2886334  & 12,5744496 \\ \hline
+%4          & 0,067568  & 0,4623772 & 1,50308    & 3,356147   & 6,4029342  \\ \hline
+%8          & 0,0446426 & 0,2502202 & 0,802811   & 1,8829026  & 3,767297   \\ \hline
+%16         & 0,0435478 & 0,2325758 & 0,75944848 & 1,8147124  & 3,6430722  \\ \hline
+%\end{tabular}
+%\end{table}
 
-\subsection{Friendly Numbers}
-A tabela a seguir apresenta as médias dos tempos de execução, em segundos, do algoritmo Friendly Numbers, utilizando a biblioteca OpenMP para aplicar a programação paralela:
+A Figura 3 apresenta os tempos de execução, em segundos, do algoritmo LU Factorization, utilizando a interface POSIX e seus mecanismos de sicronização:
 
-\begin{table}[h!]
-\begin{tabular}{|l|l|l|l|l|l|}
-\hline
-FN(OpenMP) & Tiny      & Small     & Standard  & Large      & Huge          \\ \hline
-1          & 0,256367  & 7,32771   & 67,527976 & 261,549858 & 2080,2424425  \\ \hline
-2          & 0,1304722 & 3,915811  & 34,06778  & 131,1595   & 1041,778571   \\ \hline
-4          & 0,0687594 & 2,1136986 & 17,339    & 66,28066   & 526,123298    \\ \hline
-8          & 0,035863  & 1,0586734 & 9,1957    & 35,135421  & 278,406388667 \\ \hline
-16         & 0,0341244 & 0,815274  & 6,741703  & 25,384411  & 196,3132902   \\ \hline
-\end{tabular}
-\end{table}
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=100mm,scale=0.5]{graph_lu_posix.jpg}
+  \caption{LU Factorization com POSIX}
+  \label{fig:LU POSIX}
+\end{figure}
 
-A tabela a seguir apresenta as médias dos tempos de execução, em segundos, do algoritmo Friendly Numbers, utilizando a interface POSIX e seus mecanismos de sicronização para aplicar a programação paralela:
+%\begin{table}[h!]
+%\begin{tabular}{|l|l|l|l|l|l|}
+%\hline
+%LU(POSIX) & Tiny       & Small     & Standard  & Large     & Huge       \\ \hline
+%1         & 0,21806988 & 1,7079306 & 5,2348252 & 12,340098 & 24,5316108 \\ \hline
+%2         & 0,1856204  & 1,1790356 & 3,7191378 & 8,8093492 & 16,948548  \\ \hline
+%4         & 0,1519794  & 0,8019212 & 2,5203218 & 5,8215284 & 11,0193182 \\ \hline
+%8         & 0,2544392  & 0,759183  & 2,069339  & 4,25864   & 7,9015666  \\ \hline
+%16        & 0,4113672  & 1,1094982 & 2,5012814 & 5,0221258 & 9,0107844  \\ \hline
+%\end{tabular}
+%\end{table}
 
-\begin{table}[h!]
-\begin{tabular}{|l|l|l|l|l|l|}
-\hline
-FN(POSIX) & Tiny      & Small     & Standard   & Large       & Huge        \\ \hline
-1         & 0,250649  & 7,4230634 & 67,6131404 & 261,5427563 & 2081,528432 \\ \hline
-2         & 0,1303334 & 3,882124  & 34,000364  & 131,115897  & 1041,65766  \\ \hline
-4         & 0,0641866 & 2,0957426 & 17,3014644 & 66,4081193  & 526,62245   \\ \hline
-8         & 0,0314374 & 1,0409284 & 9,1667388  & 35,1374076  & 277,511353  \\ \hline
-16        & 0,033889  & 0,7949844 & 6,7532104  & 25,4352573  & 195,892532  \\ \hline
-\end{tabular}
-\end{table}
 
-\section{Trabalhos relacionados}
+A Figura 4 apresenta o gráfico com os tempos de execução, em segundos, do algoritmo Friendly Numbers, utilizando a biblioteca OpenMP para aplicar a programação paralela.
 
-\section{Conclusão}
-Após analisar os resultados obtidos, é possível perceber algumas diferenças, em termos de eficiência e comportamentos. É possível afirmar que ambas as estruturas possuem uma redução significante no tempo de execução à medida que o número de threads/processos são incrementados. Notável também a perda de desempenho na utilização da interface POSIX e OpenMP após um número variável de processos utilzados, principalmente quando a carga processada não era considerada grande. 
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=100mm,scale=0.5]{graph_fn_x86.jpg}
+  \caption{FN Factorization com OpenMP}
+  \label{fig:LU OpenMP}
+\end{figure}
+
+%\begin{table}[h!]
+%\begin{tabular}{|l|l|l|l|l|l|}
+%\hline
+%FN(OpenMP) & Tiny      & Small     & Standard  & Large      & Huge          \\ \hline
+%1          & 0,256367  & 7,32771   & 67,527976 & 261,549858 & 2080,2424425  \\ \hline
+%2          & 0,1304722 & 3,915811  & 34,06778  & 131,1595   & 1041,778571   \\ \hline
+%4          & 0,0687594 & 2,1136986 & 17,339    & 66,28066   & 526,123298    \\ \hline
+%8          & 0,035863  & 1,0586734 & 9,1957    & 35,135421  & 278,406388667 \\ \hline
+%16         & 0,0341244 & 0,815274  & 6,741703  & 25,384411  & 196,3132902   \\ \hline
+%\end{tabular}
+%\end{table}
+
+A Figura 5 apresenta o gráfico com os tempos de execução, em segundos, do algoritmo Friendly Numbers, utilizando a interface POSIX e seus mecanismos de sicronização para aplicar a programação paralela.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=100mm,scale=0.5]{graph_fn_posix.jpg}
+  \caption{FN Factorization com POSIX}
+  \label{fig:FN POSIX}
+\end{figure}
+
+%\begin{table}[h!]
+%\begin{tabular}{|l|l|l|l|l|l|}
+%\hline
+%FN(POSIX) & Tiny      & Small     & Standard   & Large       & Huge        \\ \hline
+%1         & 0,250649  & 7,4230634 & 67,6131404 & 261,5427563 & 2081,528432 \\ \hline
+%2         & 0,1303334 & 3,882124  & 34,000364  & 131,115897  & 1041,65766  \\ \hline
+%4         & 0,0641866 & 2,0957426 & 17,3014644 & 66,4081193  & 526,62245   \\ \hline
+%8         & 0,0314374 & 1,0409284 & 9,1667388  & 35,1374076  & 277,511353  \\ \hline
+%16        & 0,033889  & 0,7949844 & 6,7532104  & 25,4352573  & 195,892532  \\ \hline
+%\end{tabular}
+%\end{table}
+
+
+Após analisar os resultados obtidos, é possível perceber algumas diferenças, em termos de eficiência e comportamentos. É possível afirmar que ambas as estruturas possuem uma redução significante no tempo de execução à medida que o número de \textit{threads}/processos são incrementados. Notável também a perda de desempenho na utilização da interface POSIX e OpenMP após um número variável de processos utilizados, principalmente quando a carga processada não era considerada grande. 
 
 A perda de performance com a utilização da interface POSIX, citada no parágrafo anterior, é mais evidente nos resultados do algoritmo LU. A implementação do algoritmo LU com POSIX exigiu mais barreiras de sicronização, quando um processo é congelado à espera da chegada dos processos restantes para continuar a execução do algoritmo, essencial para o trabalho em paralelo. O fato de haver um número consideralvemente maior de barreiras que o algoritmo FN, explica o motivo pelo qual o desempenho do LU perde mais performance com o aumento do número de processos. Quanto mais processos sendo utilizados, mais tempo de espera será necessário para que todos os processos alcançem a barreira de sicronização. Diferemente do algoritmo FN que possui apenas uma barreira de sicronização em todo o algoritmo, o tornando mais eficiente. 
 
-Em comparação ao OpenMP, os resultados, em relaçao ao FN, ambos os métodos implementados obtiveram resultados muito similares. A pouca sicronização exigida fez com que ambos desempenhassem de maneira muito parecida, em todos os tamanhos de carga processada. Os tempos de execução do LU apresentam comportamentos diferentes, à medida que os processos e threads eram incrementados, ambos obtiveram melhora porém os tempos de execução da implementaçao com OpenMP tiveram um SpeedUp consideravelmente maior, mostrando uma melhor eficiência na sicronização de threads que o POSIX. 
+Em comparação ao OpenMP, os resultados, em relaçao ao FN, ambos os métodos implementados obtiveram resultados muito similares. A pouca sicronização exigida fez com que ambos desempenhassem de maneira muito parecida, em todos os tamanhos de carga processada. Os tempos de execução do LU apresentam comportamentos diferentes, à medida que os processos e \textit{threads} são incrementados. Ambos obtiveram melhora, porém, os tempos de execução da implementaçao com OpenMP tiveram um \textit{SpeedUp} consideravelmente maior de até 5 vezes, mostrando uma melhor eficiência na sicronização de threads que o POSIX. 
 
-A implementação da interface POSIX é válida quando bem avaliada o algoritmo a ser aplicado, um algoritmo que exige bastante sicronizações entre os processos, pode causar um SpeedUp abaixo do alcançado pelo OpenMP. Em um algoritmo de poucas sicronizações, é uma ferramenta muito atrativa em que alguns momentos se sobressaiu melhor que o OpenMP.
+\section{Conclusão}
+
+A implementação da interface POSIX é válida quando bem avaliada o algoritmo a ser aplicado, um algoritmo que exige bastante sicronizações entre os processos, pode causar um SpeedUp abaixo do alcançado pelo OpenMP. Em um algoritmo onde é exigido poucas sicronizações, é uma ferramenta muito atrativa em que alguns momentos se sobressaiu melhor que o OpenMP. Também é importante considerar o tamanho da carga a ser processada pois o frequente aumento do número de threads e processos pode ocasionar uma perda de performance, já que a criação e fechamento de muitas threads e processos podem exigir um custo mais alto do que utilizar um número menor para os mesmos. 
+
+%\cite{butenhof:97}
+%\cite{muller:2}
+%\cite{pacheco:3}
+
+\nocite{*}
 
 
-
-
-
-
-
-
-\section{References}
 
 
 \bibliographystyle{sbc}
-\bibliography{sbc-template}
+\bibliography{sbc-template.bib}
 
 \end{document}
